@@ -1,4 +1,11 @@
 # Update your twitter bio to show your root-me.org rank
+
+Default format :
+
+```text
+Root-me rank : xxx/xxxx (xxx pts)
+```
+
 ## Setup
 ### Install dependencies
 
