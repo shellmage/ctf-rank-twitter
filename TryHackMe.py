@@ -3,26 +3,38 @@ import json
 from lxml import html
 import Settings
 
-THM_LOGIN    = Settings.THM_LOGIN
-THM_PASSWORD = Settings.THM_PASSWORD
-THM_USERNAME = Settings.THM_USERNAME
 THM_WEBSITE  = 'https://tryhackme.com'
 
+class TryHackMe:
 
-def getTryHackMeRankAndUsersCount():
-   #Log into the platform
-   session = requests.Session()
-   response = session.get(THM_WEBSITE + "/login")
-   tree = html.fromstring(response.text)
-   csrf_token = tree.xpath('//input[@name="_csrf"]/@value')
-   response = session.post(THM_WEBSITE + "/login", data = {"email": THM_LOGIN, "password": THM_PASSWORD, "_csrf": csrf_token[0]})
+   def __init__(self, login, password, username):
+      self._login = login
+      self._password = password
+      self._username = username
 
-   #Get global stats
-   response = session.get(THM_WEBSITE + "/api/getstats")
-   globalStats = json.loads(response.text)
+      self.session = requests.Session()
+      self.login()
 
-   #Get user stats
-   response = session.get(THM_WEBSITE + "/api/usersRank/" + THM_USERNAME)
-   userStats =  json.loads(response.text)
+   def login(self):
+      response = self.session.get(THM_WEBSITE + "/login")
+      tree = html.fromstring(response.text)
+      csrf_token = tree.xpath('//input[@name="_csrf"]/@value')
+      response = self.session.post(THM_WEBSITE + "/login", data = {"email": self._login, "password": self._password, "_csrf": csrf_token[0]})
 
-   return str(userStats['userRank']), str(globalStats['totalUsers'])
+   def getTotalUsers(self):
+      response = self.session.get(THM_WEBSITE + "/api/getstats")
+      globalStats = json.loads(response.text)
+
+      return str( globalStats['totalUsers'] )
+
+   def getUserRank(self):
+      response = self.session.get(THM_WEBSITE + "/api/usersRank/" + self._username)
+      userStats =  json.loads(response.text)
+
+      return str(userStats['userRank'])
+
+   def pprint(self):
+      return 'TryHackMe rank : {}/{}\n'.format(
+         self.getUserRank(),
+         self.getTotalUsers()
+      )

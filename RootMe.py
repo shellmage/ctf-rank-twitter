@@ -11,72 +11,86 @@ import Settings
 # to avoid HTTP error 429 (Too Many Requests)
 # 100ms looks to be enough atm
 
-DELAY       = 0.1
-LOGIN       = Settings.ROOTME_LOGIN
-PASSWORD    = Settings.ROOTME_PASSWORD
-API         = 'https://api.www.root-me.org'
+DELAY = 0.1
+API   = 'https://api.www.root-me.org'
 
 # Shortened URL encoding function
-enc = parse.urlencode
+encode = parse.urlencode
 
+class RootMe:
 
-def panic(msg):
-    print('Error : {}'.format(msg))
-    print('Program will exit.')
-    exit(1)
+    def __init__(self, login, password):
+        self._login = login
+        self._password = password
 
+        self.session = requests.Session()
+        self.login()
 
-def login():
-    p = { 'login': LOGIN, 'password': PASSWORD }
-    r = requests.get('{}/login?{}'.format( API, enc(p) ))
-    j = json.loads(r.text).pop()
+    # -- Log user in API endpoint
+    def login(self):
+        params  = encode( { 'login': self._login, 'password': self._password } )
+        request = self.session.get( API + '/login?{}'.format(params) )
+        JSON    = json.loads( request.text ).pop()
 
-    if j.get('info', False) == False:
-        panic('Invalid credentials 1.')
+        if JSON.get('info', False) == False:
+            self.panic('Invalid credentials.')
 
-    return r.cookies
+    # -- Resolve user ID based on username
+    def getUserId(self):
+        time.sleep(DELAY)
 
+        params  = encode( { 'nom' : self._login } )
+        request = self.session.get( API + '/auteurs?{}'.format(params) )
+        JSON    = json.loads( request.text ).pop()
 
-def getUserId(cookies):
-    time.sleep(DELAY)
+        if len(JSON) == 0:
+            self.panic( 'No matching user [{}]'.format(self._login) )
+        elif len(JSON) != 1:
+            self.panic( 'Several users found with login [{}].'.format(self._login) )
 
-    p = { 'nom' : LOGIN }
-    r = requests.get('{}/auteurs?{}'.format( API, enc(p) ), cookies=cookies)
-    j = json.loads(r.text).pop()
+        _, value = JSON.popitem()
 
-    if len(j) == 0:
-        panic('No matching user {}'.format(LOGIN))
-    elif len(j) != 1:
-        print('Several users found with login [{}].'.format(login))
-        print('Will take a random one.')
+        return value.get('id_auteur')
 
-    _, value = j.popitem()
+    # -- Fetch user score
+    def fetchScore(self):
+        time.sleep(DELAY)
 
-    return value.get('id_auteur')
+        userid  = self.getUserId()
+        request = self.session.get(API + '/auteurs/{}'.format(userid))
+        JSON    = json.loads( request.text )
 
+        if JSON.get('score', False) == False:
+            self.panic('Unknown error fetching user score.')
 
-def fetchScore(userid, cookies):
-    time.sleep(DELAY)
+        return JSON.get('score')
 
-    r = requests.get(API + '/auteurs/{}'.format(userid), cookies=cookies)
-    j = json.loads(r.text)
+    # -- Fetch user rank
+    # Dirty stuff, you should better not read that
+    def fetchRank(self):
+        time.sleep(DELAY)
 
-    return j.get('score')
+        url = '{}/{}?inc=score&lang=fr'.format(
+            API.replace('api.', ''),
+            self._login
+        )
 
+        dom = htmldom.HtmlDom().createDom(requests.get(url).text)
+        span = dom.find('div.medium-4 > span.txxl')[1].html().replace(' ', '').replace('\n', '').split('>')
 
-# Dirty stuff, you should better not read that
-def fetchRank(cookies):
-    time.sleep(DELAY)
+        myRank = span[1].split('<')[0]
+        maxRank = span[2].split('<')[0].replace('/', '')
 
-    url = '{}/{}?inc=score&lang=fr'.format(
-        API.replace('api.', ''),
-        LOGIN
-    )
+        return '{}/{}'.format(myRank, maxRank)
 
-    dom = htmldom.HtmlDom().createDom(requests.get(url).text)
-    span = dom.find('div.medium-4 > span.txxl')[1].html().replace(' ', '').replace('\n', '').split('>')
+    # -- Pretty print
+    def pprint(self):
+        return 'Root-me rank : {} ({} pts)\n'.format(
+            self.fetchRank(),
+            self.fetchScore()
+        )
 
-    myRank = span[1].split('<')[0]
-    maxRank = span[2].split('<')[0].replace('/', '')
-
-    return '{}/{}'.format(myRank, maxRank)
+    def panic(self, msg):
+        print('Error : {}'.format(msg))
+        print('Program will exit.')
+        exit(1)

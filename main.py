@@ -1,7 +1,7 @@
-import twitter
+from RootMe import RootMe
+from TryHackMe import TryHackMe
 
-import TryHackMe
-import RootMe
+import twitter
 import Settings
 
 twitterAPI = twitter.Api(
@@ -11,26 +11,39 @@ twitterAPI = twitter.Api(
     access_token_secret = Settings.TWITTER_TOKEN_SECRET
 )
 
+def updateTwitterBio(rm_client, thm_client, htb_client):
+    bio = 'a Lazy Hacker\n\n'
 
-def updateTwitterBio(rootMeDesc, ThmDesc):
-    twitterAPI.UpdateProfile(description = rootMeDesc + '\n' + ThmDesc)
+    if rm_client != None:
+        bio += rm_client.pprint()
 
+    if thm_client != None:
+        bio += thm_client.pprint()
+
+    if htb_client != None:
+        bio += htb_client.pprint()
+
+    twitterAPI.UpdateProfile( description = bio )
 
 def main():
-    #RootMe management
-    cookies = RootMe.login()
-    userID  = RootMe.getUserId(cookies)
-    score   = RootMe.fetchScore(userID, cookies)
-    rank    = RootMe.fetchRank(cookies)
-    print('Root-me rank : {} ({} pts)'.format(rank, score))
+    # Init root-me client
+    rm = RootMe (
+        Settings.ROOTME_LOGIN,
+        Settings.ROOTME_PASSWORD
+    )
 
-    #ThyHackMe management
-    thm_user_rank, thm_total_users = TryHackMe.getTryHackMeRankAndUsersCount()
-    print('TryHackMe rank : ' + thm_user_rank + '/' + thm_total_users)
+    # Init tryhackme client
+    thm =  TryHackMe (
+        Settings.THM_LOGIN,
+        Settings.THM_PASSWORD,
+        Settings.THM_USERNAME
+    )
 
-    #Twitter description update
-    updateTwitterBio('Root-me rank : {} ({} pts)'.format(rank, score), 'TryHackMe rank : ' + thm_user_rank + '/' + thm_total_users)
+    # Twitter description update
+    updateTwitterBio(rm, thm, None)
+
     print("Twitter update successful")
+   
 
 if __name__ == "__main__":
     main()
