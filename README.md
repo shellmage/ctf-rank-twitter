@@ -1,9 +1,10 @@
-# Update your twitter bio to show your root-me.org rank
+# Update your twitter bio to show your root-me.org and your tryhackme.com ranks
 
 Default format :
 
 ```text
-Root-me rank : xxx/xxxx (xxx pts)
+Root-me rank : xxx/xxxxx (xxx pts)
+TryHackMe rank : xxx/xxxxx
 ```
 
 ## Setup
@@ -19,7 +20,7 @@ Go to [developer.twitter.com](https://developer.twitter.com/en/docs) and request
 
 ### Give your credentials
 
-Open and fill `main.py` whith your credentials
+Open and fill `Settings.py` whith your credentials
 
 ### Setup a cronjob
 
