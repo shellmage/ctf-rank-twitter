@@ -43,7 +43,6 @@ def main():
     updateTwitterBio(rm, thm, None)
 
     print("Twitter update successful")
-   
 
 if __name__ == "__main__":
     main()

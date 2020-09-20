@@ -33,8 +33,15 @@ class TryHackMe:
 
       return str(userStats['userRank'])
 
+   def getUserScore(self):
+      response = self.session.get(THM_WEBSITE + "/api/user/" + self._username)
+      userScore =  json.loads(response.text)
+
+      return str(userScore['points'])
+
    def pprint(self):
-      return 'TryHackMe rank : {}/{}\n'.format(
+      return 'TryHackMe rank : {}/{} ({} pts)\n'.format(
          self.getUserRank(),
-         self.getTotalUsers()
+         self.getTotalUsers(),
+         self.getUserScore()
       )
