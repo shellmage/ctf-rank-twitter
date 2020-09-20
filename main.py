@@ -1,4 +1,5 @@
 from htmldom import htmldom
+from urllib import parse
 import twitter
 import requests
 import json
@@ -20,13 +21,17 @@ LOGIN       = ''
 PASSWORD    = ''
 API         = 'https://api.www.root-me.org'
 
+# Shortened URL encoding function
+enc = parse.urlencode 
+
 def panic(msg):
     print('Error : {}'.format(msg))
     print('Program will exit.')
     exit(1)
 
 def login(login, password):
-    r = requests.get(API + '/login?login={}&password={}'.format(login, password))
+    p = { 'login' : login, 'password' : password }
+    r = requests.get('{}/login?{}'.format( API, enc(p) ))
     j = json.loads(r.text).pop()
 
     if j.get('info', False) == False:
@@ -37,7 +42,8 @@ def login(login, password):
 def getUserId(login, cookies):
     time.sleep(DELAY)
 
-    r = requests.get(API + '/auteurs?nom={}'.format(login), cookies=cookies)
+    p = { 'nom' : login }
+    r = requests.get('{}/auteurs?{}'.format( API, enc(p) ), cookies=cookies)
     j = json.loads(r.text).pop()
 
     if len(j) == 0:
@@ -68,7 +74,7 @@ def fetchRank(login, cookies):
     )
 
     dom = htmldom.HtmlDom().createDom(requests.get(url).text)
-    span = dom.find("div.medium-4 > span.txxl")[1].html().replace(' ', '').replace('\n', '').split('>')
+    span = dom.find('div.medium-4 > span.txxl')[1].html().replace(' ', '').replace('\n', '').split('>')
 
     myRank = span[1].split('<')[0]
     maxRank = span[2].split('<')[0].replace('/', '')
