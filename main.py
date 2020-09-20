@@ -12,7 +12,7 @@ twitterAPI = twitter.Api(
 )
 
 def updateTwitterBio(rm_client, thm_client, htb_client):
-    bio = 'a Lazy Hacker\n\n'
+    bio = ''
 
     if rm_client != None:
         bio += rm_client.pprint()
