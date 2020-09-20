@@ -4,7 +4,7 @@ Default format :
 
 ```text
 Root-me rank : xxx/xxxxx (xxx pts)
-TryHackMe rank : xxx/xxxxx
+TryHackMe rank : xxx/xxxxx (xxx pts)
 ```
 
 ## Setup
