@@ -19,7 +19,7 @@ Go to [developer.twitter.com](https://developer.twitter.com/en/docs) and request
 
 ### Give your credentials
 
-Open and fill `main.py` whith your credentials, and then you're ready to go.
+Open and fill `main.py` whith your credentials
 
 ### Setup a cronjob
 
