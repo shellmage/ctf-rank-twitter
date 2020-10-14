@@ -28,25 +28,35 @@ class RootMe:
 
     # -- Log user in API endpoint
     def login(self):
-        params  = encode( { 'login': self._login, 'password': self._password } )
-        request = self.session.get( API + '/login?{}'.format(params) )
-        JSON    = json.loads( request.text ).pop()
+        params = encode({ 
+            'login'    : self._login, 
+            'password' : self._password 
+        })
 
-        if JSON.get('info', False) == False:
+        request = self.session.get( f'{API}/login?{params}' )
+
+        JSON = json.loads( request.text ).pop()
+
+        if 'info' not in JSON:
             self.panic('Invalid credentials.')
-
+            
     # -- Resolve user ID based on username
     def getUserId(self):
         time.sleep(DELAY)
 
-        params  = encode( { 'nom' : self._login } )
-        request = self.session.get( API + '/auteurs?{}'.format(params) )
-        JSON    = json.loads( request.text ).pop()
+        params = encode({ 
+            'nom' : self._login 
+        })
+
+        request = self.session.get( f'{API}/auteurs?{params}' )
+
+        JSON = json.loads( request.text ).pop()
 
         if len(JSON) == 0:
-            self.panic( 'No matching user [{}]'.format(self._login) )
+            self.panic( f'No matching user [{self._login}]' )
+            
         elif len(JSON) != 1:
-            self.panic( 'Several users found with login [{}].'.format(self._login) )
+            self.panic( f'Several users found with login [{self._login}].' )
 
         _, value = JSON.popitem()
 
@@ -57,10 +67,10 @@ class RootMe:
         time.sleep(DELAY)
 
         userid  = self.getUserId()
-        request = self.session.get(API + '/auteurs/{}'.format(userid))
+        request = self.session.get( f'{API}/auteurs/{userid}' )
         JSON    = json.loads( request.text )
 
-        if JSON.get('score', False) == False:
+        if 'score' not in JSON:
             self.panic('Unknown error fetching user score.')
 
         return JSON.get('score')
@@ -81,16 +91,13 @@ class RootMe:
         myRank = span[1].split('<')[0]
         maxRank = span[2].split('<')[0].replace('/', '')
 
-        return '{}/{}'.format(myRank, maxRank)
+        return f'{myRank}/{maxRank}'
 
     # -- Pretty print
     def pprint(self):
-        return 'Root-me rank : {} ({} pts)\n'.format(
-            self.fetchRank(),
-            self.fetchScore()
-        )
+        return f'Root-me rank : {self.fetchRank()} ({self.fetchScore()} pts)\n'
 
     def panic(self, msg):
-        print('Error : {}'.format(msg))
+        print(f'Error : {msg}')
         print('Program will exit.')
         exit(1)
