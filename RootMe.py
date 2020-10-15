@@ -1,5 +1,6 @@
 from htmldom import htmldom
 from urllib import parse
+from lxml import html
 
 import twitter
 import requests
@@ -9,10 +10,12 @@ import Settings
 
 # Delay between API requests
 # to avoid HTTP error 429 (Too Many Requests)
-# 100ms looks to be enough atm
+# 500ms looks to be a good compromize
 
-DELAY = 0.1
-API   = 'https://api.www.root-me.org'
+DELAY = 0.5
+
+RM_URL_ROOT  = 'https://www.root-me.org'
+RM_URL_API   = 'https://api.www.root-me.org'
 
 # Shortened URL encoding function
 encode = parse.urlencode
@@ -26,6 +29,17 @@ class RootMe:
         self.session = requests.Session()
         self.login()
 
+    # -- Unified api compliant get method
+    def get(self, url):
+        time.sleep(DELAY)
+
+        response = self.session.get( url )
+
+        if not response.ok:
+            self.panic(f'HTTP Error on ({ url })[{ response.status_code }]')
+        
+        return response
+
     # -- Log user in API endpoint
     def login(self):
         params = encode({ 
@@ -33,71 +47,54 @@ class RootMe:
             'password' : self._password 
         })
 
-        request = self.session.get( f'{API}/login?{params}' )
-
-        JSON = json.loads( request.text ).pop()
-
-        if 'info' not in JSON:
-            self.panic('Invalid credentials.')
+        self.get( f'{ RM_URL_API }/login?{ params }' )
             
     # -- Resolve user ID based on username
     def getUserId(self):
-        time.sleep(DELAY)
 
         params = encode({ 
             'nom' : self._login 
         })
 
-        request = self.session.get( f'{API}/auteurs?{params}' )
+        response = self.get( f'{ RM_URL_API }/auteurs?{ params }' ).json()
 
-        JSON = json.loads( request.text ).pop()
-
-        if len(JSON) == 0:
+        if len(response) == 0:
             self.panic( f'No matching user [{self._login}]' )
-            
-        elif len(JSON) != 1:
+
+        # Strict selection
+        # Do not handle multiple user match atm
+        elif len(response) != 1:
             self.panic( f'Several users found with login [{self._login}].' )
 
-        _, value = JSON.popitem()
+        _, value = response.pop().popitem()
 
         return value.get('id_auteur')
 
     # -- Fetch user score
     def fetchScore(self):
-        time.sleep(DELAY)
 
-        userid  = self.getUserId()
-        request = self.session.get( f'{API}/auteurs/{userid}' )
-        JSON    = json.loads( request.text )
+        response = self.get( f'{ RM_URL_API }/auteurs/{ self.getUserId() }' ).json()
 
-        if 'score' not in JSON:
-            self.panic('Unknown error fetching user score.')
-
-        return JSON.get('score')
+        return response.get('score')
 
     # -- Fetch user rank
-    # Dirty stuff, you should better not read that
+    # Cannot properly use root-me api atm
     def fetchRank(self):
-        time.sleep(DELAY)
 
-        url = '{}/{}?inc=score&lang=fr'.format(
-            API.replace('api.', ''),
-            self._login
-        )
+        url = f'{ RM_URL_ROOT }/{ self._login }?inc=score&lang=fr'
 
-        dom = htmldom.HtmlDom().createDom(requests.get(url).text)
-        span = dom.find('div.medium-4 > span.txxl')[1].html().replace(' ', '').replace('\n', '').split('>')
+        tree = html.fromstring( self.get( url ).text )
+        score = tree.xpath('//span[contains(@class, "txxl") ]/span[@class = "gris"]').pop()
 
-        myRank = span[1].split('<')[0]
-        maxRank = span[2].split('<')[0].replace('/', '')
+        myRank = score.getparent().text.rstrip()
+        maxRank = score.text
 
-        return f'{myRank}/{maxRank}'
+        return f'{myRank}{maxRank}'
 
     # -- Pretty print
     def pprint(self):
-        return f'Root-me rank : {self.fetchRank()} ({self.fetchScore()} pts)\n'
+        return f'Root-me rank : { self.fetchRank() } ({ self.fetchScore() } pts)\n'
 
     def panic(self, msg):
         print(f'Error : {msg}')
-        print('Program will exit.')
         exit(1)
