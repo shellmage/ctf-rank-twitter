@@ -1,12 +1,8 @@
-from htmldom import htmldom
 from urllib import parse
 from lxml import html
 
-import twitter
 import requests
-import json
 import time
-import Settings
 
 # Delay between API requests
 # to avoid HTTP error 429 (Too Many Requests)
