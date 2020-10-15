@@ -1,4 +1,4 @@
 requests==2.24.0
 python-twitter==3.5
-htmldom==2.0
-lxml
+lxml==4.5.2
+apscheduler==3.6.3
