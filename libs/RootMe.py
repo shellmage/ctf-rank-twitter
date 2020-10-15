@@ -81,6 +81,13 @@ class RootMe:
 
         return f'{myRank}{maxRank}'
 
+    # -- Fetch challenge(s) id(s) solved
+    def fetchChalls(self):
+
+        response = self.get( f'{ RM_URL_API }/auteurs/{ self.getUserId() }' ).json()
+
+        return [ x.get('id_challenge') for x in response.get('validations') ]
+
     # -- Pretty print
     def pprint(self):
         return f'Root-me rank : { self.fetchRank() } ({ self.fetchScore() } pts)\n'
