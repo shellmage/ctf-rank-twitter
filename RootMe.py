@@ -53,22 +53,16 @@ class RootMe:
     def getUserId(self):
 
         params = encode({ 
-            'nom' : self._login 
+            'nom' : self._login
         })
 
-        response = self.get( f'{ RM_URL_API }/auteurs?{ params }' ).json()
+        response = self.get( f'{ RM_URL_API }/auteurs?{ params }' ).json()[0]
 
-        if len(response) == 0:
-            self.panic( f'No matching user [{self._login}]' )
-
-        # Strict selection
-        # Do not handle multiple user match atm
-        elif len(response) != 1:
-            self.panic( f'Several users found with login [{self._login}].' )
-
-        _, value = response.pop().popitem()
-
-        return value.get('id_auteur')
+        for v in response.values():
+            if v.get('nom') == self._login:
+                return v.get('id_auteur')
+        
+        self.panic( f'No matching user [{self._login}]' )
 
     # -- Fetch user score
     def fetchScore(self):
@@ -86,7 +80,7 @@ class RootMe:
         tree = html.fromstring( self.get( url ).text )
         score = tree.xpath('//span[contains(@class, "txxl") ]/span[@class = "gris"]').pop()
 
-        myRank = score.getparent().text.rstrip()
+        myRank = score.getparent().text.strip()
         maxRank = score.text
 
         return f'{myRank}{maxRank}'
