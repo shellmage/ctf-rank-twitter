@@ -2,7 +2,6 @@ from lxml import html
 
 import requests
 import json
-import Settings
 
 THM_WEBSITE  = 'https://tryhackme.com'
 
@@ -20,7 +19,8 @@ class TryHackMe:
       response = self.session.get(f'{ THM_WEBSITE }/login')
       tree = html.fromstring(response.text)
       csrf_token = tree.xpath('//input[@name="_csrf"]/@value')
-      response = self.session.post(f'{ THM_WEBSITE }/login', data = {'email': self._login, 'password': self._password, '_csrf': csrf_token[0]})
+      
+      self.session.post(f'{ THM_WEBSITE }/login', data = {'email': self._login, 'password': self._password, '_csrf': csrf_token[0]})
 
    def getTotalUsers(self):
       response = self.session.get(f'{ THM_WEBSITE }/api/getstats')
