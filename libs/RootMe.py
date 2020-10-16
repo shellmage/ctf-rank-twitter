@@ -18,12 +18,40 @@ encode = parse.urlencode
 
 class RootMe:
 
+    # -- Inner challenge class
+    class RootMeChall:
+        def __init__(self, data):
+            self.name       = data.get('titre')
+            self.type       = data.get('rubrique')
+            self.subt       = data.get('soustitre')
+            self.score      = data.get('score')
+            self.url        = data.get('url_challenge')
+            self.difficulty = data.get('difficulte')
+            self.author     = data.get('auteurs')
+
+    # -- Init function
     def __init__(self, login, password):
         self._login = login
         self._password = password
 
         self.session = requests.Session()
         self.login()
+        self.update()
+
+    # -- Log user in API endpoint
+    def login(self):
+        params = encode({ 
+            'login'    : self._login, 
+            'password' : self._password 
+        })
+
+        self.get( f'{ RM_URL_API }/login?{ params }' )
+
+    # -- Update local data
+    def update(self):
+        self.rank  = self.fetchRank()
+        self.score = self.fetchScore()
+        self.solve = self.fetchChalls()
 
     # -- Unified api compliant get method
     def get(self, url):
@@ -35,15 +63,6 @@ class RootMe:
             self.panic(f'HTTP Error on ({ url })[{ response.status_code }]')
         
         return response
-
-    # -- Log user in API endpoint
-    def login(self):
-        params = encode({ 
-            'login'    : self._login, 
-            'password' : self._password 
-        })
-
-        self.get( f'{ RM_URL_API }/login?{ params }' )
             
     # -- Resolve user ID based on username
     def getUserId(self):
@@ -86,12 +105,39 @@ class RootMe:
 
         response = self.get( f'{ RM_URL_API }/auteurs/{ self.getUserId() }' ).json()
 
-        return [ x.get('id_challenge') for x in response.get('validations') ]
+        return sorted( [ x.get('id_challenge') for x in response.get('validations') ] )
 
-    # -- Pretty print
+    # -- Fetch challenge info by id
+    def fetchChallInfo(self, id):
+
+        return self.RootMeChall( self.get( f'{ RM_URL_API }/challenges/{ id }' ).json() )
+
+    # -- Get freshly solved challenges
+    def getNewSolve(self):
+
+        return [self.fetchChallInfo( x ) for x in self.fetchChalls() if x not in self.solve]
+
+    # -- User solved new chall since last check ?
+    def hasNewSolve(self):
+
+        return self.fetchChalls() != self.solve
+
+    # -- User hase new rank since last check ?
+    def hasNewRank(self):
+
+        return self.fetchRank() != self.rank
+
+    # -- User hase new rank since last check ?
+    def hasNewScore(self):
+
+        return self.fetchScore() != self.score
+
+    # -- Pretty print twitter bio
     def pprint(self):
         return f'Root-me rank : { self.fetchRank() } ({ self.fetchScore() } pts)\n'
 
     def panic(self, msg):
         print(f'Error : {msg}')
         exit(1)
+
+        
