@@ -3,7 +3,6 @@ THM_PASSWORD    = ''
 THM_USERNAME    = ''
 
 ROOTME_LOGIN    = ''
-ROOTME_PASSWORD = ''
 
 HTB_LOGIN       = ''
 HTB_PASSWORD    = ''

@@ -29,7 +29,6 @@ def main():
     # Init root-me client
     rm = RootMe (
         Settings.ROOTME_LOGIN,
-        Settings.ROOTME_PASSWORD
     )
 
     # Init tryhackme client
