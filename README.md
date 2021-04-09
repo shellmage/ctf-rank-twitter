@@ -32,7 +32,7 @@ To update every 10 minutes :
 
 ## What's next ?
 
-* Do not update if rank hasn't changed
+* <del>Do not update if rank hasn't changed</del> ✅
 * Better DOM parsing (I know)
 * Better error handling
 * Might release docker image
