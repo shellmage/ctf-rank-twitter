@@ -13,6 +13,7 @@ twitterAPI = twitter.Api(
 
 def updateTwitterBio(rm_client, thm_client, htb_client):
     bio = ''
+    old_bio = twitterAPI.VerifyCredentials().description
 
     if rm_client != None:
         bio += rm_client.pprint()
@@ -23,7 +24,11 @@ def updateTwitterBio(rm_client, thm_client, htb_client):
     if htb_client != None:
         bio += htb_client.pprint()
 
-    twitterAPI.UpdateProfile( description = bio )
+    if bio != old_bio:
+        twitterAPI.UpdateProfile( description = bio )
+    else:
+        print('No update available')
+        exit()
 
 def main():
     # Init root-me client

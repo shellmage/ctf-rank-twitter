@@ -48,7 +48,7 @@ class RootMe:
 
     # -- Pretty print
     def pprint(self):
-        return f'Root-me rank : { self.fetchInfo() }\n'
+        return f'Root-me rank : { self.fetchInfo() }'
 
     def panic(self, msg):
         print(f'Error : {msg}')
