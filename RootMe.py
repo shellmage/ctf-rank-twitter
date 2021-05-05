@@ -33,18 +33,13 @@ class RootMe:
 
     def fetchInfo(self):
 
-        url = f'{ RM_URL_ROOT }/{ self._login }?inc=score&lang=fr'
+        url = f'{ RM_URL_ROOT }/{ self._login }'
 
         tree = html.fromstring( self.get( url ).text )
-        score = tree.xpath('//span[contains(@class, "txxl") ]/span[@class = "gris"]').pop()
+        rank = tree.xpath('//div/span[(text() = "Place")]/preceding-sibling::h3').pop().text_content().strip()
+        points = tree.xpath('//div/span[(text() = "Points")]/preceding-sibling::h3').pop().text_content().strip()
 
-        myRank = score.getparent().text.strip()
-        maxRank = score.text
-
-        challenges = tree.xpath('//span[contains(@class, "txxl") ]/span[@class = "gris tl"]').pop()
-        points = challenges.getparent().text.strip().split('Points')[0]
-
-        return f'{myRank}{maxRank} ({points}pts)'
+        return f'#{rank} ({points}pts)'
 
     # -- Pretty print
     def pprint(self):
